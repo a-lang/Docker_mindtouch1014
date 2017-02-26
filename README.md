@@ -6,6 +6,7 @@ How to use it?
  build -t {image-name} .
  ```
 2. Start the container
+
  ```
  docker run -d -p 80:80 \
  -v /etc/localtime:/etc/localtime:ro \
