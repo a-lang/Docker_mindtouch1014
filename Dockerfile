@@ -2,6 +2,8 @@ FROM centos:centos5
 MAINTAINER A-Lang <alang.hsu@gmail.com>
 
 # Install latest update
+ADD CentOS-Base.repo /etc/yum.repos.d/
+ADD libselinux.repo /etc/yum.repos.d/
 RUN rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-5
 RUN yum -y update
 
@@ -11,7 +13,7 @@ RUN yum -y install mysql-server
 # Install Apache & PHP
 RUN yum -y install epel-release
 RUN yum -y install httpd php-common php php-mysql php-mysqlnd php-gd \
-    php-mbstring php-mcrypt wv links pdftohtml tidy html2ps
+    php-mbstring php-mcrypt wv links pdftohtml tidy html2ps mod_ssl
 
 # Install Mono
 RUN yum -y install wget bison gettext glib2 freetype fontconfig libpng libpng-devel \
@@ -39,10 +41,12 @@ RUN sed -i 's/\/var\/log\/mysqld.log/\/var\/log\/mysql\/mysqld.log/g' /etc/my.cn
 
 # Configure Dekiwiki
 RUN chkconfig dekiwiki off
-ADD deki-apache.conf /etc/httpd/conf.d/deki-apache.conf
+RUN rm -f /etc/httpd/conf.d/deki*
+ADD deki-apache.conf /etc/httpd/conf.d/
+ADD deki-apache-ssl.conf.disabled /etc/httpd/conf.d/
 
 # Port & Volume
-EXPOSE 80
+EXPOSE 80 443
 VOLUME ["/data","/var/lib/mysql","/var/log/mysql","/var/log/httpd","/var/log/dekiwiki","/var/www/dekiwiki/attachments"]
 
 # Script to start services
