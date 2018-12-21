@@ -1,25 +1,30 @@
 How to use it?
 ---------------
 1. Build the container
- 
+
  ```
  build -t {image-name} .
  ```
-2. Start the container
+2. Create the directories
+
+```
+mkdir vol/{data,var-lib-mysql,var-log-httpd,var-log-dekiwiki,var-www-dekiwiki-attachments,var-www-dekiwiki-bin-cache}
+```
+3. Start the container
 
  ```
- docker run -d -p 80:80 \
- -p 443:443 \
- -v /etc/localtime:/etc/localtime:ro \
- -v /docker_vol/data:/data \
- -v /docker_vol/var-lib-mysql:/var/lib/mysql \
- -v /docker_vol/var-log-httpd:/var/log/httpd \
- -v /docker_vol/var-log-dekiwiki:/var/log/dekiwiki \
- -v /docker_vol/var-www-dekiwiki-attachments:/var/www/dekiwiki/attachments \
- --name {container-name} \
- {image-name} \
- /bin/bash
- ```  
+docker run -d -p 80:80 \
+-v /etc/localtime:/etc/localtime:ro \
+-v $PWD/vol/data:/data \
+-v $PWD/vol/var-lib-mysql:/var/lib/mysql \
+-v $PWD/vol/var-log-httpd:/var/log/httpd \
+-v $PWD/vol/var-log-dekiwiki:/var/log/dekiwiki \
+-v $PWD/vol/var-www-dekiwiki-attachments:/var/www/dekiwiki/attachments \
+-v $PWD/vol/var-www-dekiwiki-bin-cache:/var/www/dekiwiki/bin/cache \
+--name {container-name} \
+{image-name} \
+/bin/bash
+ ```
 Hoping you enjoy it !
 
 

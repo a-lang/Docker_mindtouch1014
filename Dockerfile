@@ -1,57 +1,65 @@
-FROM centos:centos5
-MAINTAINER A-Lang <alang.hsu@gmail.com>
+FROM centos:centos6
+MAINTAINER Alang <alang.hsu@gmail.com>
 
-# Install latest update
-ADD CentOS-Base.repo /etc/yum.repos.d/
-ADD libselinux.repo /etc/yum.repos.d/
-RUN rpm --import http://mirror.centos.org/centos/RPM-GPG-KEY-CentOS-5
-RUN yum -y update
+# Update the CentOS
+RUN yum -y update; yum clean all
 
-# Install MySQL
-RUN yum -y install mysql-server 
-
-# Install Apache & PHP
+# Install the packages required
 RUN yum -y install epel-release
-RUN yum -y install httpd php-common php php-mysql php-mysqlnd php-gd \
-    php-mbstring php-mcrypt wv links pdftohtml tidy html2ps mod_ssl
 
 # Install Mono
-RUN yum -y install wget bison gettext glib2 freetype fontconfig libpng libpng-devel \
-    libX11 libX11-devel glib2-devel libgdi* libexif glibc-devel urw-fonts java unzip \
-    gcc gcc-c++ automake autoconf libtool make bzip2
+RUN yum install -y bison gettext glib2 freetype fontconfig libpng \
+    libpng-devel libX11 libX11-devel glib2-devel libgdi* libexif glibc-devel \
+    urw-fonts java unzip gcc gcc-c++ automake autoconf libtool make bzip2 wget
 RUN cd /root && \
-    wget http://download.mono-project.com/sources/mono/mono-2.10.8.tar.gz && \
-    tar xzf mono-2.10.8.tar.gz && \
-    cd mono-2.10.8 && ./configure --prefix=/opt/mono-2.10.8 && make && make install
+    wget -nv -O mono-2.10.8.tar.gz https://github.com/a-lang/Docker_mindtouch1014/releases/download/2.10.8/mono-2.10.8_for_dekiwiki_only.tar.gz && \
+    tar xzPf mono-2.10.8.tar.gz && \
+    cd mono-2.10.8/ && ./configure --prefix=/opt/mono-2.10.8 && \
+    make clean && \
+    make && make install 
+
+# install mysql, httpd
+RUN yum install -y mysql-server httpd php-common php php-mysql php-gd \
+    php-mbstring php-mcrypt wv links tidy html2ps mod_ssl \
+    poppler-utils html2text mod_proxy_html vim-enhanced
+
+
+# Install Mindtouch
+RUN cd /root && \
+    wget http://repo.mindtouch.com/CentOS_5/noarch/mindtouch-10.1.4-6.1.noarch.rpm && \
+    rpm -ivh mindtouch-*.rpm
 
 # Install Prince
-RUN yum -y install wget
 RUN cd /root && \
-    wget http://www.princexml.com/download/prince-10r7-1.centos5.x86_64.rpm && \
+    wget http://www.princexml.com/download/prince-11.3-1.centos6.x86_64.rpm && \
     rpm -ivh prince*.rpm
 
-
-# Install Dekiwiki
-RUN yum -y install wv links pdftohtml tidy html2ps
-ADD mindtouch.repo /etc/yum.repos.d/
-RUN yum -y install mindtouch
-
-# Configure MySQL
+# Configure mysql
 RUN sed -i 's/\/var\/log\/mysqld.log/\/var\/log\/mysql\/mysqld.log/g' /etc/my.cnf
 
 # Configure Dekiwiki
 RUN chkconfig dekiwiki off
-RUN rm -f /etc/httpd/conf.d/deki*
+RUN rm -f /etc/httpd/conf.d/deki-apache.conf
 ADD deki-apache.conf /etc/httpd/conf.d/
-ADD deki-apache-ssl.conf.disabled /etc/httpd/conf.d/
+
+# Set the permission
+RUN chown -R dekiwiki:apache /var/www/dekiwiki/{attachments,bin}
+
+# Disable the auto start for the daemons
+RUN chkconfig httpd off
+RUN chkconfig mysqld off
+
+# Clean up the unused files
+RUN yum clean all && \
+    cd /root && \
+    rm -f *.rpm mono-*.tar.gz && \
+    rm -rf mono-*/
 
 # Port & Volume
-EXPOSE 80 443
-VOLUME ["/data","/var/lib/mysql","/var/log/mysql","/var/log/httpd","/var/log/dekiwiki","/var/www/dekiwiki/attachments"]
+EXPOSE 80 
+VOLUME ["/data","/var/lib/mysql","/var/log/mysql","/var/log/httpd","/var/log/dekiwiki","/var/www/dekiwiki/attachments","/var/www/dekiwiki/bin/cache"]
 
 # Script to start services
 ADD startup.sh /
 RUN chmod 755 /startup.sh
 ENTRYPOINT /startup.sh
-
-

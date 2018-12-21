@@ -8,8 +8,6 @@ echo "" >> /etc/bashrc
 echo "# This is required for the command top" >> /etc/bashrc
 echo "export TERM=xterm" >> /etc/bashrc
 
-chown -R dekiwiki:apache /var/www/dekiwiki
-
 echo "Starting mysql..."
 service mysqld start
 
